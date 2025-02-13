@@ -1,0 +1,56 @@
+,,
+1. 設計目的與角色,,
+項目,說明,
+插件基底類別,UMacroMethodProviderPlugin 是抽象類別，用於提供 Script 中的 Macro 執行方法。,
+不可卸載的限制,插件直接載入到主 AppDomain，無法中途卸載。,
+主要用途,"- 管理插件生命週期（Initialize 與 Close）。
+- 提供巨集的配置、查詢、存取、序列化等操作。
+- 提供 UI 對話框或控制項來設定插件或 Macro 的參數。
+- 支援 XML 設定檔的匯入與匯出。",
+2. 功能流程總覽,,
+階段,說明,
+建構子,預先定義系統 I/O 控制名稱（ioctl），並綁定對應的存取委派。,
+Initialize,"- 載入資源並建立巨集方法列表（m_UserQueryOpenedMethods）。
+- 標記 m_bOpened = true。",
+使用階段,"- 透過 CreateMacroInstance 建立可執行的 Macro 實例。
+- 使用 SetMacroControl 等方法存取 Macro 的參數。",
+讀寫設定檔,提供 WritePluginClassSettings 和 ReadPluginClassSettings 等方法，用於序列化為 XML。,
+Close,釋放資源並清除已建立的 Macro。,
+3. 核心介面與抽象方法,,
+方法類型,方法名稱,說明
+抽象方法,Initialize(UDataCarrier[] param),插件初始化。
+,Close(),釋放資源。
+與 Macro 相關的方法,CreateMacroInstance,建立 Macro 實例。
+,RecycleMacro,回收 Macro 並釋放資源。
+,SetupMacroImmutableOnes,配置不可變參數。
+,SetupMacroVariables,配置可變參數。
+與 Plugin Class 相關,SetClassControl,設置插件類別的參數。
+,GetClassControl,獲取插件類別的參數。
+反射機制,AutoBindingMacroPredefineCtrl,透過反射自動綁定特定命名規則的方法。
+4. 主要資料結構,,
+資料結構,說明,
+m_UserQueryOpenedMethods,存放插件開放的 Macro 方法列表。,
+m_CreatedMacros,存放實際建立的 Macro 實例。,
+m_PluginClassControls,存放插件類別的控制項定義。,
+m_MacroControls,存放 Macro 的控制項定義。,
+UDataCarrier[],用於通用傳遞與序列化的容器型別。,
+5. 設計面向,,
+設計面向,說明,
+抽象基類與模板方法,透過多階段初始化和掛鉤方法，確保繼承者可以在不同生命週期階段完成操作。,
+Reflection 的應用,利用反射自動綁定特定命名規則的方法。,
+設定檔讀寫,提供多種輔助函式來處理 XML 序列化與反序列化。,
+Thread-Safe 處理,使用 Monitor.Enter 保護多執行緒操作。,
+權限與語系,預留 ChangeLanguage 和 ChangeAccessLvl 等方法，支援多語系和權限管理。,
+6. 使用方式,,
+步驟,說明,
+繼承類別,宣告並實作 Initialize 方法，建立要開放的 MethodList。,
+載入插件,由管理端呼叫 Initialize 並進行初始化。,
+使用指令,從 UserQueriedMethodList 中找到指令並生成可執行的 Macro。,
+序列化與反序列化,使用 WriteMacroSettings 和 ReadMacroSettings 處理檔案。,
+7. 建議與優化方向,,
+建議方向,說明,
+命名與文件化,補充更高層級的文件，幫助新開發者理解。,
+錯誤處理,加強例外處理策略，避免系統崩潰。,
+多執行緒管理,擴展多執行緒保護範圍。,
+AppDomain 卸載問題,考慮使用 AssemblyLoadContext 替代 AppDomain。,
+反射依賴,考慮使用 Attribute 或 Source Generator 來減少對反射字串的依賴。,
